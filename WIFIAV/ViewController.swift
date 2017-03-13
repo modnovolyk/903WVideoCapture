@@ -12,7 +12,7 @@ import AVFoundation
 class ViewController: UIViewController {
 
     let receiver = try! UDPSocket(port: 3102, queue: DispatchQueue.main)
-    let buffer = RawH264Buffer(length: 1024 * 50)
+    let buffer = RawH264NaluBuffer(length: 1024 * 50)
     let converter = StreamConverter()
     
     var state = ReceivingState.idle

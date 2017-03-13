@@ -169,12 +169,12 @@ class StreamConverter {
     }
 }
 
-extension StreamConverter: RawH264BufferDelegate {
-    func didGatherUp(frame: Data, in buffer: RawH264Buffer) {
+extension StreamConverter: NaluBufferDelegate {
+    func didGatherUp(frame: Data, in buffer: NaluBuffer) {
         convert(frame: frame)
     }
     
-    func didFail(with error: RawH264BufferError, in buffer: RawH264Buffer) {
+    func didFail(with error: NaluBufferError, in buffer: NaluBuffer) {
         
     }
 }

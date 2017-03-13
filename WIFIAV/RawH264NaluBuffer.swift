@@ -8,30 +8,42 @@
 
 import Foundation
 
-enum RawH264BufferError: Error {
+protocol NaluBuffer {
+    var delegate: NaluBufferDelegate? { get set }
+    var length: Int { get }
+    var bytes: Data { get }
+    
+    init(length: Int, delegate: NaluBufferDelegate?)
+    
+    func append(_ data: Data)
+    func flush()
+}
+
+protocol NaluBufferDelegate: class {
+    func didGatherUp(frame: Data, in buffer: NaluBuffer)
+    func didFail(with error: NaluBufferError, in buffer: NaluBuffer)
+}
+
+enum NaluBufferError: Error {
     case bufferTooSmall
     case notEnoughSpace
 }
 
-protocol RawH264BufferDelegate: class {
-    func didGatherUp(frame: Data, in buffer: RawH264Buffer)
-    func didFail(with error: RawH264BufferError, in buffer: RawH264Buffer)
-}
-
-class RawH264Buffer {
-    private let buffer: UnsafeMutablePointer<UInt8>
-    private(set) var endIndex = 0
-    
+class RawH264NaluBuffer: NaluBuffer {
+    weak var delegate: NaluBufferDelegate?
     let length: Int
     
     var bytes: Data {
         return Data(bytes: buffer, count: endIndex)
     }
     
-    weak var delegate: RawH264BufferDelegate?
-    
-    init(length: Int) {
+    private let buffer: UnsafeMutablePointer<UInt8>
+    private(set) var endIndex = 0
+
+    required init(length: Int, delegate: NaluBufferDelegate? = nil) {
         self.length = length
+        self.delegate = delegate
+        
         buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: length)
     }
     
@@ -45,7 +57,7 @@ class RawH264Buffer {
             return
         }
         
-        if data.beginsWithStartCode {
+        if data.beginsWithNaluStartCode {
             flush()
         }
         
@@ -72,7 +84,7 @@ class RawH264Buffer {
 }
 
 extension Data {
-    var beginsWithStartCode: Bool {
+    var beginsWithNaluStartCode: Bool {
         if count < 4 {
             return false
         }

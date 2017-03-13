@@ -9,7 +9,7 @@
 import XCTest
 @testable import WIFIAV
 
-class RawH264BufferTests: XCTestCase {
+class RawH264NaluBufferTests: XCTestCase {
     override func setUp() {
         super.setUp()
         
@@ -25,8 +25,7 @@ class RawH264BufferTests: XCTestCase {
             receivedFrames += 1
         })
         
-        let buffer = RawH264Buffer(length: 1024 * 20)
-        buffer.delegate = delegate
+        let buffer = RawH264NaluBuffer(length: 1024 * 20, delegate: delegate)
         
         for packetBytes in videoFramePackets {
             let packetData = Data(bytes: packetBytes.ignoreUDPHeader())
@@ -41,7 +40,7 @@ class RawH264BufferTests: XCTestCase {
     }
     
     func testBufferDidReuseMemory() {
-        let buffer = RawH264Buffer(length: 1024 * 20)
+        let buffer = RawH264NaluBuffer(length: 1024 * 20)
         
         for packetBytes in twoVideoFramesPackets {
             let packetData = Data(bytes: packetBytes.ignoreUDPHeader())
@@ -56,7 +55,7 @@ class RawH264BufferTests: XCTestCase {
     }
     
     func testBufferDidHandleNotEnoughSpace() {
-        let buffer = RawH264Buffer(length: 3000)
+        let buffer = RawH264NaluBuffer(length: 3000)
         
         let packetData = Data(bytes: videoFramePacket1.ignoreUDPHeader())
         let videoPacket = packetData.withUnsafeRawBufferPointer { buffer in
@@ -76,8 +75,8 @@ class RawH264BufferTests: XCTestCase {
 }
 
 class BufferDelegate {
-    typealias DidGatherUpHandler = (Data, RawH264Buffer) -> Void
-    typealias DidFailHandler = (RawH264BufferError, RawH264Buffer) -> Void
+    typealias DidGatherUpHandler = (Data, NaluBuffer) -> Void
+    typealias DidFailHandler = (NaluBufferError, NaluBuffer) -> Void
     
     var didGatherUp: DidGatherUpHandler?
     var didFail: DidFailHandler?
@@ -88,12 +87,12 @@ class BufferDelegate {
     }
 }
 
-extension BufferDelegate: RawH264BufferDelegate {
-    func didGatherUp(frame: Data, in buffer: RawH264Buffer) {
+extension BufferDelegate: NaluBufferDelegate {
+    func didGatherUp(frame: Data, in buffer: NaluBuffer) {
         didGatherUp?(frame, buffer)
     }
     
-    func didFail(with error: RawH264BufferError, in buffer: RawH264Buffer) {
+    func didFail(with error: NaluBufferError, in buffer: NaluBuffer) {
         didFail?(error, buffer)
     }
 }
