@@ -17,12 +17,12 @@ protocol Socket {
     init(port: Int, delegate: SocketDelegate?, queue: DispatchQueue) throws
     
     func listen()
-    func stopListening()
-    func send(_ data: Data, to addr: sockaddr_in?)
+    func send(_ data: Data, to address: sockaddr_in)
+    func shutdown()
 }
 
 protocol SocketDelegate: class {
-    func didReceive(data: Data, from addr: sockaddr_in, on socket: Socket)
+    func didReceive(data: Data, from address: sockaddr_in, on socket: Socket)
 }
 
 enum SocketError: Error {
@@ -36,7 +36,7 @@ class UDPSocket: Socket {
     private(set) var listening: Bool {
         get {
             return serialQueue.sync {
-                _listening
+                return _listening
             }
         }
         set {
@@ -54,7 +54,7 @@ class UDPSocket: Socket {
     
     private var socket: Int32
     
-    required init(port: Int, delegate: SocketDelegate? = nil, queue: DispatchQueue = DispatchQueue(label: "udp", qos: .background)) throws {
+    required init(port: Int, delegate: SocketDelegate? = nil, queue: DispatchQueue = DispatchQueue(label: "UDPSocket.delegationQueue", qos: .background)) throws {
         self.delegationQueue = queue
         self.delegate = delegate
         
@@ -86,7 +86,7 @@ class UDPSocket: Socket {
         
         listening = true
         
-        backgroundQueue.async { [unowned self] in
+        backgroundQueue.async {
             var sourceAddress = sockaddr_in()
             var addressLength = socklen_t(MemoryLayout<sockaddr_in>.stride)
             
@@ -112,26 +112,27 @@ class UDPSocket: Socket {
         }
     }
     
-    func stopListening() {
-        listening = false
-    }
-    
-    func send(_ data: Data, to addr: sockaddr_in? = nil) {
-        var addr = addr
-        let addrlen = socklen_t(MemoryLayout<sockaddr_in>.stride)
+    func send(_ data: Data, to address: sockaddr_in) {
+        var address = address
+        let addressLength = socklen_t(MemoryLayout<sockaddr_in>.stride)
         data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> Void in
-            let dataPrt = UnsafeRawPointer(bytes)
-            let _ = withUnsafePointer(to: &addr) {
+            let dataPtr = UnsafeRawPointer(bytes)
+            let _ = withUnsafePointer(to: &address) {
                 $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
-                    return sendto(socket, dataPrt, data.count, MSG_DONTWAIT, $0, addrlen)
+                    return sendto(socket, dataPtr, data.count, MSG_DONTWAIT, $0, addressLength)
                 }
             }
         }
     }
     
-    deinit {
-        // Deal with running receiving loop
+    func shutdown() {
+        guard listening else {
+            return
+        }
         
+        listening = false
+        
+        let _ = Darwin.shutdown(socket, SHUT_RD)
         close(socket)
     }
 }
