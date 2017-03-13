@@ -13,7 +13,7 @@ class ViewController: UIViewController {
 
     let receiver = try! UDPSocket(port: 3102, queue: DispatchQueue.main)
     let buffer = RawH264NaluBuffer(length: 1024 * 50)
-    let converter = ElementaryStreamConverter()
+    let converter = ElementaryVideoStreamConverter()
     
     var state = ReceivingState.idle
     
@@ -90,7 +90,7 @@ extension ViewController: SocketDelegate {
 }
 
 extension ViewController: StreamConverterDelegate {
-    func didGatherUp(sample: CMSampleBuffer, in converter: StreamConverter) {
+    func didGatherUp(sample: CMSampleBuffer, in converter: VideoStreamConverter) {
         videoLayer.enqueue(sample)
     }
 }
