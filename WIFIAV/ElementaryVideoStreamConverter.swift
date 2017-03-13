@@ -8,14 +8,26 @@
 
 import AVFoundation
 
-protocol StreamConverterDelegate: class {
-    func didGatherUp(sample: CMSampleBuffer, in converter: StreamConverter)
+protocol VideoStreamConverter {
+    var delegate: StreamConverterDelegate? { get set }
+    
+    init(delegate: StreamConverterDelegate?)
+    
+    func convert(frame: Data)
 }
 
-class StreamConverter {
+protocol StreamConverterDelegate: class {
+    func didGatherUp(sample: CMSampleBuffer, in converter: VideoStreamConverter)
+}
+
+class ElementaryVideoStreamConverter: VideoStreamConverter {
     weak var delegate: StreamConverterDelegate?
     
     private var formatDescription: CMFormatDescription?
+    
+    required init(delegate: StreamConverterDelegate? = nil) {
+        self.delegate = delegate
+    }
     
     func convert(frame: Data) {
         guard frame.count > 4 else {
@@ -169,7 +181,7 @@ class StreamConverter {
     }
 }
 
-extension StreamConverter: NaluBufferDelegate {
+extension ElementaryVideoStreamConverter: NaluBufferDelegate {
     func didGatherUp(frame: Data, in buffer: NaluBuffer) {
         convert(frame: frame)
     }

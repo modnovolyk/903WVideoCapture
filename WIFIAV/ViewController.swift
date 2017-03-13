@@ -13,7 +13,7 @@ class ViewController: UIViewController {
 
     let receiver = try! UDPSocket(port: 3102, queue: DispatchQueue.main)
     let buffer = RawH264NaluBuffer(length: 1024 * 50)
-    let converter = StreamConverter()
+    let converter = ElementaryStreamConverter()
     
     var state = ReceivingState.idle
     
