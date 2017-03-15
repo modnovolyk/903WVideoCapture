@@ -21,22 +21,28 @@ class UDPSocketTests: XCTestCase {
         var socket: UDPSocket? = try! UDPSocket(port: 55000)
         weak var weakSocket = socket
         
+        XCTAssertNotNil(weakSocket)
+        
         socket = nil
         
         XCTAssertNil(weakSocket)
     }
     
     func testListeningSocketGetsDeallocatedAfterShutdown() {
-        var socket: UDPSocket? = try! UDPSocket(port: 55001)
-        weak var weakSocket = socket
+        weak var weakSocket: Socket?
         
-        socket?.listen()
-        
-        socket = nil
-        
-        XCTAssertNotNil(weakSocket)
-        
-        weakSocket?.shutdown()
+        autoreleasepool {
+            var socket: UDPSocket? = try! UDPSocket(port: 55001)
+            weakSocket = socket
+            
+            socket?.listen()
+            
+            socket = nil
+            
+            XCTAssertNotNil(weakSocket)
+            
+            weakSocket?.shutdown()
+        }
         
         XCTAssertNil(weakSocket)
     }
