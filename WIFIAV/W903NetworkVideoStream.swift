@@ -64,21 +64,21 @@ class W903NetworkVideoStream: NetworkVideoStream {
              
              switch state {
              case .idle where Announcement.isRecognized(in: bufferPointer):
-                try? socket.send(AllInfoRequest.bytes)
+                try! socket.send(AllInfoRequest.bytes)
                 state = .gotAnnouncement
              
              case .gotAnnouncement where AllInfoResponse.isRecognized(in: bufferPointer):
-                try? socket.send(Acknowledgement(received: 0, next: 1).bytes)
-                try? socket.send(StreamSettingsRequest.bytes)
+                try! socket.send(Acknowledgement(received: 0, next: 1).bytes)
+                try! socket.send(StreamSettingsRequest.bytes)
                 state = .gotAllInfo
              
              case .gotAllInfo where StreamSettingsResponse.isRecognized(in: bufferPointer):
-                try? socket.send(Acknowledgement(received: 1, next: 2).bytes)
+                try! socket.send(Acknowledgement(received: 1, next: 2).bytes)
                 state = .gotStreamSettings
              
              case .gotStreamSettings where VideoData.isRecognized(in: bufferPointer):
                 let videoData = try! VideoData(bufferPointer)
-                try? socket.send(Acknowledgement(received: videoData.sequence, next: videoData.sequence &+ 1).bytes)
+                try! socket.send(Acknowledgement(received: videoData.sequence, next: videoData.sequence &+ 1).bytes)
                 buffer.append(videoData.bytes)
              
              case _ where Announcement.isRecognized(in: bufferPointer):
