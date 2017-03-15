@@ -8,7 +8,7 @@
 
 import Foundation
 
-protocol NaluBuffer {
+protocol NaluBuffer: class {
     var delegate: NaluBufferDelegate? { get set }
     var length: Int { get }
     var bytes: Data { get }

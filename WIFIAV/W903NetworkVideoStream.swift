@@ -9,7 +9,7 @@
 import Foundation
 import AVFoundation
 
-protocol NetworkVideoStream {
+protocol NetworkVideoStream: class {
     var delegate: NetworkVideoStreamDelegate? { get set }
     
     var socket: Socket { get set }
@@ -38,17 +38,57 @@ class W903NetworkVideoStream: NetworkVideoStream {
         self.buffer = buffer
         self.converter = converter
         
-        self.socket.delegate = self
-        self.buffer.delegate = converter
-        self.converter.delegate = self
+        socket.delegate = self
+        buffer.delegate = converter
+        converter.delegate = self
+        
+        socket.listen()
     }
     
     deinit {
         socket.shutdown()
     }
     
+    enum ReceivingState {
+        case idle
+        case gotAnnouncement
+        case gotAllInfo
+        case gotStreamSettings
+    }
+    
+    var state = ReceivingState.idle
+    
     func process(_ data: Data) {
-        
+         data.withUnsafeBytes { (bytesPtr: UnsafePointer<UInt8>) -> Void in
+             let bufferPointer = UnsafeRawBufferPointer(start: bytesPtr, count: data.count)
+             
+             switch state {
+             case .idle where Announcement.isRecognized(in: bufferPointer):
+                try? socket.send(AllInfoRequest.bytes)
+                state = .gotAnnouncement
+             
+             case .gotAnnouncement where AllInfoResponse.isRecognized(in: bufferPointer):
+                try? socket.send(Acknowledgement(received: 0, next: 1).bytes)
+                try? socket.send(StreamSettingsRequest.bytes)
+                state = .gotAllInfo
+             
+             case .gotAllInfo where StreamSettingsResponse.isRecognized(in: bufferPointer):
+                try? socket.send(Acknowledgement(received: 1, next: 2).bytes)
+                state = .gotStreamSettings
+             
+             case .gotStreamSettings where VideoData.isRecognized(in: bufferPointer):
+                let videoData = try! VideoData(bufferPointer)
+                try? socket.send(Acknowledgement(received: videoData.sequence, next: videoData.sequence &+ 1).bytes)
+                buffer.append(videoData.bytes)
+             
+             case _ where Announcement.isRecognized(in: bufferPointer):
+                state = .idle
+                break
+             
+             default:
+                print("Default case")
+             }
+         }
     }
 }
 
