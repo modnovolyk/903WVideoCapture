@@ -29,6 +29,7 @@ enum SocketError: Error {
     case creationFailure
     case bindFailure
     case invalidAddress
+    case messageNotSent
 }
 
 class UDPSocket: Socket {
@@ -120,14 +121,15 @@ class UDPSocket: Socket {
                 }
                 
                 if receivedLength > 0 {
-                    self.delegationQueue.async {
-                        self.delegate?.didReceive(data: Data(bytes: buffer, count: receivedLength), from: sourceAddress, on: self)
-                    }
-                    
                     if self._activeAddress == nil {
                         if self.activeAddress == nil {
                             self.activeAddress = sourceAddress
                         }
+                    }
+                    
+                    let bytes = Data(bytes: buffer, count: receivedLength)
+                    self.delegationQueue.async {
+                        self.delegate?.didReceive(data: bytes, from: sourceAddress, on: self)
                     }
                 }
             } while self.listening
@@ -141,12 +143,16 @@ class UDPSocket: Socket {
         
         let addressLength = socklen_t(MemoryLayout<sockaddr_in>.stride)
         
-        data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> Void in
+        try data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> Void in
             let dataPtr = UnsafeRawPointer(bytes)
-            let _ = withUnsafePointer(to: &address) {
+            let sendBytes = withUnsafePointer(to: &address) {
                 $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
                     return sendto(socket, dataPtr, data.count, MSG_DONTWAIT, $0, addressLength)
                 }
+            }
+            
+            guard sendBytes != -1 else {
+                throw SocketError.messageNotSent
             }
         }
     }
