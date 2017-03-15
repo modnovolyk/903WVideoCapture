@@ -11,11 +11,7 @@ import AVFoundation
 
 class ViewController: UIViewController {
 
-    let receiver = try! UDPSocket(port: 3102, queue: DispatchQueue.main)
-    let buffer = RawH264NaluBuffer(length: 1024 * 50)
-    let converter = ElementaryVideoStreamConverter()
-    
-    var state = ReceivingState.idle
+    let videoStream: NetworkVideoStream = W903NetworkVideoStream()
     
     lazy var videoLayer: AVSampleBufferDisplayLayer = {
         let layer = AVSampleBufferDisplayLayer()
@@ -33,12 +29,7 @@ class ViewController: UIViewController {
      
         view.layer.addSublayer(videoLayer)
         
-        buffer.delegate = converter
-        converter.delegate = self
-        
-        receiver.delegate = self
-        receiver.listen()
-        
+        videoStream.delegate = self
     }
 
     override func didReceiveMemoryWarning() {
@@ -47,50 +38,8 @@ class ViewController: UIViewController {
     }
 }
 
-enum ReceivingState {
-    case idle
-    case gotAnnouncement
-    case gotAllInfo
-    case gotStreamSettings
-}
-
-extension ViewController: SocketDelegate {
-    func didReceive(data: Data, from addr: sockaddr_in, on socket: Socket) {
-        data.withUnsafeBytes { (bytesPtr: UnsafePointer<UInt8>) -> Void in
-            let bufferPointer = UnsafeRawBufferPointer(start: bytesPtr, count: data.count)
-            
-            switch state {
-            case .idle where Announcement.isRecognized(in: bufferPointer):
-                receiver.send(AllInfoRequest.bytes, to: addr)
-                state = .gotAnnouncement
-                
-            case .gotAnnouncement where AllInfoResponse.isRecognized(in: bufferPointer):
-                receiver.send(Acknowledgement(received: 0, next: 1).bytes, to: addr)
-                receiver.send(StreamSettingsRequest.bytes, to: addr)
-                state = .gotAllInfo
-                
-            case .gotAllInfo where StreamSettingsResponse.isRecognized(in: bufferPointer):
-                receiver.send(Acknowledgement(received: 1, next: 2).bytes, to: addr)
-                state = .gotStreamSettings
-                
-            case .gotStreamSettings where VideoData.isRecognized(in: bufferPointer):
-                let videoData = try! VideoData(bufferPointer)
-                receiver.send(Acknowledgement(received: videoData.sequence, next: videoData.sequence &+ 1).bytes, to: addr)
-                buffer.append(videoData.bytes)
-            
-            case _ where Announcement.isRecognized(in: bufferPointer):
-                //state = .idle
-                break
-                
-            default:
-                print("Default case")
-            }
-        }
-    }
-}
-
-extension ViewController: StreamConverterDelegate {
-    func didGatherUp(sample: CMSampleBuffer, in converter: VideoStreamConverter) {
+extension ViewController: NetworkVideoStreamDelegate {
+    func handle(sample: CMSampleBuffer, from stream: NetworkVideoStream) {
         videoLayer.enqueue(sample)
     }
 }

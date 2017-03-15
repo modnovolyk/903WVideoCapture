@@ -8,7 +8,7 @@
 
 import AVFoundation
 
-protocol VideoStreamConverter {
+protocol VideoStreamConverter: class {
     var delegate: StreamConverterDelegate? { get set }
     
     init(delegate: StreamConverterDelegate?)
@@ -158,7 +158,7 @@ class ElementaryVideoStreamConverter: VideoStreamConverter {
         }
         
         guard blockBuffer != nil else {
-            print("Error: Reached end of method without available blockBuffer")
+            print("Error: Reached end of the method without available blockBuffer")
             return
         }
         
@@ -187,6 +187,6 @@ extension ElementaryVideoStreamConverter: NaluBufferDelegate {
     }
     
     func didFail(with error: NaluBufferError, in buffer: NaluBuffer) {
-        
+        print("NaluBuffer Error: \(error)")
     }
 }
