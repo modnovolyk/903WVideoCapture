@@ -10,14 +10,14 @@ import Darwin
 import Dispatch
 import Foundation
 
-protocol Socket {
+protocol Socket: class {
     var delegate: SocketDelegate? { get set }
     var listening: Bool { get }
     
     init(port: Int, delegate: SocketDelegate?, queue: DispatchQueue) throws
     
     func listen()
-    func send(_ data: Data, to address: sockaddr_in)
+    func send(_ data: Data, to address: sockaddr_in?) throws
     func shutdown()
 }
 
@@ -26,8 +26,9 @@ protocol SocketDelegate: class {
 }
 
 enum SocketError: Error {
-    case cantCreate
-    case cantBind
+    case creationFailure
+    case bindFailure
+    case invalidAddress
 }
 
 class UDPSocket: Socket {
@@ -48,6 +49,21 @@ class UDPSocket: Socket {
     
     private var _listening = false
     
+    private var activeAddress: sockaddr_in? {
+        get {
+            return serialQueue.sync {
+                return _activeAddress
+            }
+        }
+        set {
+            serialQueue.sync {
+                _activeAddress = newValue
+            }
+        }
+    }
+    
+    private var _activeAddress: sockaddr_in? = nil
+    
     private let serialQueue = DispatchQueue(label: "UDPSocket.serialQueue")
     private let backgroundQueue = DispatchQueue(label: "UDPSocket.backgroundQueue(receiving-loop)", qos: .background)
     private let delegationQueue: DispatchQueue
@@ -60,7 +76,7 @@ class UDPSocket: Socket {
         
         socket = Darwin.socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
         guard socket != -1 else {
-            throw SocketError.cantCreate
+            throw SocketError.creationFailure
         }
         
         var socketAddress = sockaddr_in()
@@ -75,7 +91,7 @@ class UDPSocket: Socket {
         }
         
         guard bindResult != -1 else {
-            throw SocketError.cantBind
+            throw SocketError.bindFailure
         }
     }
     
@@ -107,14 +123,24 @@ class UDPSocket: Socket {
                     self.delegationQueue.async {
                         self.delegate?.didReceive(data: Data(bytes: buffer, count: receivedLength), from: sourceAddress, on: self)
                     }
+                    
+                    if self._activeAddress == nil {
+                        if self.activeAddress == nil {
+                            self.activeAddress = sourceAddress
+                        }
+                    }
                 }
             } while self.listening
         }
     }
     
-    func send(_ data: Data, to address: sockaddr_in) {
-        var address = address
+    func send(_ data: Data, to address: sockaddr_in? = nil) throws {
+        guard var address = (address ?? self.activeAddress) else {
+            throw SocketError.invalidAddress
+        }
+        
         let addressLength = socklen_t(MemoryLayout<sockaddr_in>.stride)
+        
         data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> Void in
             let dataPtr = UnsafeRawPointer(bytes)
             let _ = withUnsafePointer(to: &address) {
@@ -134,5 +160,11 @@ class UDPSocket: Socket {
         
         let _ = Darwin.shutdown(socket, SHUT_RD)
         close(socket)
+    }
+}
+
+extension Socket {
+    func send(_ data: Data, to address: sockaddr_in? = nil) throws {
+        try send(data, to: address)
     }
 }
