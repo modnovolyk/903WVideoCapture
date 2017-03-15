@@ -30,20 +30,24 @@ class UDPSocketTests: XCTestCase {
     
     func testListeningSocketGetsDeallocatedAfterShutdown() {
         weak var weakSocket: Socket?
+        var socket: UDPSocket? = try! UDPSocket(port: 55001)
+        weakSocket = socket
+            
+        socket?.listen()
+            
+        socket = nil
+            
+        XCTAssertNotNil(weakSocket)
+            
+        weakSocket?.shutdown()
         
-        autoreleasepool {
-            var socket: UDPSocket? = try! UDPSocket(port: 55001)
-            weakSocket = socket
-            
-            socket?.listen()
-            
-            socket = nil
-            
-            XCTAssertNotNil(weakSocket)
-            
-            weakSocket?.shutdown()
+        let nullifyExpectation = expectation(description: "Wait for socket shutdown")
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            XCTAssertNil(weakSocket)
+            nullifyExpectation.fulfill()
         }
         
-        XCTAssertNil(weakSocket)
+        waitForExpectations(timeout: 2)
     }
 }
