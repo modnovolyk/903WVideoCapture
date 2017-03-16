@@ -91,6 +91,8 @@ class ElementaryVideoStreamConverter: VideoStreamConverter {
             var parameterSetPointers: [UnsafePointer<UInt8>] = [UnsafePointer<UInt8>(sps), UnsafePointer<UInt8>(pps)]
             var parameterSetSizes: [Int] = [spsSize, ppsSize]
             
+            formatDescription = nil
+            
             let status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault,
                                                                              2,
                                                                              &parameterSetPointers,
