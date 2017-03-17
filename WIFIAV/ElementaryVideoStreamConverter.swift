@@ -78,27 +78,20 @@ class ElementaryVideoStreamConverter: VideoStreamConverter {
             let spsSize = spsRange.upperBound - spsRange.lowerBound
             let ppsSize = ppsRange.upperBound - ppsRange.lowerBound
             
-            let sps = UnsafeMutablePointer<UInt8>.allocate(capacity: spsSize)
-            let pps = UnsafeMutablePointer<UInt8>.allocate(capacity: ppsSize)
-            defer {
-                sps.deallocate(capacity: spsSize)
-                pps.deallocate(capacity: ppsSize)
-            }
-            
-            frame.copyBytes(to: sps, from: spsRange)
-            frame.copyBytes(to: pps, from: ppsRange)
-            
-            var parameterSetPointers: [UnsafePointer<UInt8>] = [UnsafePointer<UInt8>(sps), UnsafePointer<UInt8>(pps)]
-            var parameterSetSizes: [Int] = [spsSize, ppsSize]
-            
             formatDescription = nil
             
-            let status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault,
-                                                                             2,
-                                                                             &parameterSetPointers,
-                                                                             &parameterSetSizes,
-                                                                             4,
-                                                                             &formatDescription)
+            let status = frame.withUnsafeBytes { (frame: UnsafePointer<UInt8>) -> OSStatus in
+                var parameterSetPointers: [UnsafePointer<UInt8>] = [frame + spsRange.lowerBound, frame + ppsRange.lowerBound]
+                var parameterSetSizes: [Int] = [spsSize, ppsSize]
+                
+                return CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault,
+                                                                           2,
+                                                                           &parameterSetPointers,
+                                                                           &parameterSetSizes,
+                                                                           4,
+                                                                           &formatDescription)
+            }
+            
             guard formatDescription != nil else {
                 print("Error: Can't create CMFormatDescription (OSStatus: \(status))")
                 return
@@ -117,9 +110,6 @@ class ElementaryVideoStreamConverter: VideoStreamConverter {
             let idrSize = idrRange.upperBound - idrRange.lowerBound
             
             let idr = UnsafeMutablePointer<UInt8>.allocate(capacity: idrSize)
-            defer {
-                idr.deallocate(capacity: idrSize)
-            }
             
             frame.copyBytes(to: idr, from: idrRange)
             
@@ -128,7 +118,8 @@ class ElementaryVideoStreamConverter: VideoStreamConverter {
             }
             
             guard CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault,
-                                                     idr, idrSize, kCFAllocatorNull,
+                                                     idr, idrSize,
+                                                     kCFAllocatorDefault,           // Cleanups our idr memory
                                                      nil, 0, idrSize, 0,
                                                      &blockBuffer) == kCMBlockBufferNoErr else {
                 print("Error: Can't create CMBlockBuffer from IDR")
@@ -140,9 +131,6 @@ class ElementaryVideoStreamConverter: VideoStreamConverter {
             let codedSliceSize = frame.count
             
             let codedSlice = UnsafeMutablePointer<UInt8>.allocate(capacity: codedSliceSize)
-            defer {
-                codedSlice.deallocate(capacity: codedSliceSize)
-            }
             
             frame.copyBytes(to: codedSlice, count: codedSliceSize)
             
@@ -151,7 +139,8 @@ class ElementaryVideoStreamConverter: VideoStreamConverter {
             }
             
             guard CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault,
-                                                     codedSlice, codedSliceSize, kCFAllocatorNull,
+                                                     codedSlice, codedSliceSize,
+                                                     kCFAllocatorDefault,           // Cleanups our codedSlice memory
                                                      nil, 0, codedSliceSize, 0,
                                                      &blockBuffer) == kCMBlockBufferNoErr else {
                 print("Error: Can't create CMBlockBuffer from coded slice")
