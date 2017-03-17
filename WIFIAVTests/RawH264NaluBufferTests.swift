@@ -51,7 +51,7 @@ class RawH264NaluBufferTests: XCTestCase {
             buffer.append(videoPacket.bytes)
         }
         
-        XCTAssertEqual(buffer.endIndex, 0)
+        XCTAssertEqual(buffer.endIndex, 929) // Equal to third frame first packet size
     }
     
     func testBufferDidHandleNotEnoughSpace() {

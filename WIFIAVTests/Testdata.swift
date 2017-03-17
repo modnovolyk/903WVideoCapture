@@ -1678,10 +1678,10 @@ extension XCTestCase {
     }
     
     var videoFramePackets: [[UInt8]] {
-        return [videoFramePacket0, videoFramePacket1, videoFramePacket2, videoFramePacket3, videoFramePacket4]
+        return [videoFramePacket0, videoFramePacket1, videoFramePacket2, videoFramePacket3, videoFramePacket4, videoFramePacket5]
     }
     
     var twoVideoFramesPackets: [[UInt8]] {
-        return [videoFramePacket0, videoFramePacket1, videoFramePacket2, videoFramePacket3, videoFramePacket4, videoFramePacket5, videoFramePacket6, videoFramePacket7, videoFramePacket8, videoFramePacket9]
+        return [videoFramePacket0, videoFramePacket1, videoFramePacket2, videoFramePacket3, videoFramePacket4, videoFramePacket5, videoFramePacket6, videoFramePacket7, videoFramePacket8, videoFramePacket9, videoFramePacket0]
     }
 }

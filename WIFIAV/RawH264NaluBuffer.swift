@@ -68,10 +68,6 @@ class RawH264NaluBuffer: NaluBuffer {
         
         data.copyBytes(to: buffer + endIndex, count: data.count)
         endIndex += data.count
-        
-        if data.endsWithZero {
-            flush()
-        }
     }
     
     func flush() {
@@ -90,13 +86,5 @@ extension Data {
         }
         
         return self[0] == 0x00 && self[1] == 0x00 && self[2] == 0x00 && self[3] == 0x01
-    }
-    
-    var endsWithZero: Bool {
-        if let lastByte = last {
-            return lastByte == 0x00
-        }
-        
-        return false
     }
 }
