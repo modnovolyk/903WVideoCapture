@@ -159,7 +159,7 @@ class ElementaryVideoStreamConverter: VideoStreamConverter {
             }
         }
         
-        guard blockBuffer != nil else {
+        guard let _ = blockBuffer else {
             print("Error: Reached end of the method without available blockBuffer")
             return
         }

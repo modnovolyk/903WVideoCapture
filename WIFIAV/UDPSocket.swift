@@ -164,7 +164,7 @@ class UDPSocket: Socket {
         
         listening = false
         
-        let _ = Darwin.shutdown(socket, SHUT_RD)
+        _ = Darwin.shutdown(socket, SHUT_RD)
         close(socket)
     }
 }
