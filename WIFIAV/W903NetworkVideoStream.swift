@@ -16,7 +16,7 @@ protocol NetworkVideoStream: class {
     var buffer: NaluBuffer { get set }
     var converter: VideoStreamConverter & NaluBufferDelegate { get set }
     
-    init(socket: Socket, buffer: NaluBuffer, converter: VideoStreamConverter & NaluBufferDelegate)
+    init(socket: Socket, buffer: NaluBuffer, converter: VideoStreamConverter & NaluBufferDelegate, delegate: NetworkVideoStreamDelegate?)
     
     func process(_ data: Data)
 }
@@ -27,16 +27,19 @@ protocol NetworkVideoStreamDelegate: class {
 
 class W903NetworkVideoStream: NetworkVideoStream {
     weak var delegate: NetworkVideoStreamDelegate?
+    
     var socket: Socket
     var buffer: NaluBuffer
     var converter: VideoStreamConverter & NaluBufferDelegate
     
     required init(socket: Socket = try! UDPSocket(port: 3102, queue: DispatchQueue.main),
                   buffer: NaluBuffer = RawH264NaluBuffer(length: 1024 * 50),
-                  converter: VideoStreamConverter & NaluBufferDelegate = ElementaryVideoStreamConverter()) {
+                  converter: VideoStreamConverter & NaluBufferDelegate = ElementaryVideoStreamConverter(),
+                  delegate: NetworkVideoStreamDelegate? = nil) {
         self.socket = socket
         self.buffer = buffer
         self.converter = converter
+        self.delegate = delegate
         
         socket.delegate = self
         buffer.delegate = converter
@@ -83,10 +86,9 @@ class W903NetworkVideoStream: NetworkVideoStream {
              
              case _ where Announcement.isRecognized(in: bufferPointer):
                 state = .idle
-                break
              
              default:
-                print("Default case")
+                print("unhandled case")
              }
          }
     }

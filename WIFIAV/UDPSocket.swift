@@ -21,6 +21,12 @@ protocol Socket: class {
     func shutdown()
 }
 
+extension Socket {
+    func send(_ data: Data, to address: sockaddr_in? = nil) throws {
+        try send(data, to: address)
+    }
+}
+
 protocol SocketDelegate: class {
     func didReceive(data: Data, from address: sockaddr_in, on socket: Socket)
 }
@@ -71,7 +77,8 @@ class UDPSocket: Socket {
     
     private var socket: Int32
     
-    required init(port: Int, delegate: SocketDelegate? = nil, queue: DispatchQueue = DispatchQueue(label: "UDPSocket.delegationQueue", qos: .background)) throws {
+    required init(port: Int, delegate: SocketDelegate? = nil,
+                  queue: DispatchQueue = DispatchQueue(label: "UDPSocket.delegationQueue", qos: .background)) throws {
         self.delegationQueue = queue
         self.delegate = delegate
         
@@ -166,11 +173,5 @@ class UDPSocket: Socket {
         
         _ = Darwin.shutdown(socket, SHUT_RD)
         close(socket)
-    }
-}
-
-extension Socket {
-    func send(_ data: Data, to address: sockaddr_in? = nil) throws {
-        try send(data, to: address)
     }
 }
