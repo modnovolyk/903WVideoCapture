@@ -67,15 +67,15 @@ class W903NetworkVideoStream: NetworkVideoStream {
              
              switch state {
              case .idle where Announcement.isRecognized(in: bufferPointer):
-                try! socket.send(AllInfoRequest.bytes)
+                try! socket.send(Describe.bytes)
                 state = .gotAnnouncement
              
-             case .gotAnnouncement where AllInfoResponse.isRecognized(in: bufferPointer):
-                try! socket.send(Acknowledgement(received: 0, next: 1).bytes)
-                try! socket.send(StreamSettingsRequest.bytes)
+             case .gotAnnouncement where Description.isRecognized(in: bufferPointer):
+                try! socket.send(Acknowledgement(received: 0, next: 1))
+                try! socket.send(SetUpStream.self)
                 state = .gotAllInfo
              
-             case .gotAllInfo where StreamSettingsResponse.isRecognized(in: bufferPointer):
+             case .gotAllInfo where StreamSetUpAck.isRecognized(in: bufferPointer):
                 try! socket.send(Acknowledgement(received: 1, next: 2).bytes)
                 state = .gotStreamSettings
              

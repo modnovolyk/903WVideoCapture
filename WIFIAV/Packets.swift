@@ -65,7 +65,7 @@ struct Announcement: IncomingPacket {
     }
 }
 
-struct AllInfoRequest: StaticOutgoingPacket {
+struct Describe: StaticOutgoingPacket {
     static var bytes: Data {
         return Data(bytes: [0x00, 0x00, 0x00, 0x76,         /*     ...v */
             0x30, 0x30, 0x31, 0x30, 0x30, 0x30, 0x30, 0x38, /* 00100008 */
@@ -75,7 +75,7 @@ struct AllInfoRequest: StaticOutgoingPacket {
     }
 }
 
-struct AllInfoResponse: IncomingPacket {
+struct Description: IncomingPacket {
     static let size = 733
     static let signature = (0x00_6f_66_6e_49_6c_6c_41 as UInt64) /* AllInfo. */
     static let signatureOffset = 26
@@ -93,17 +93,17 @@ struct AllInfoResponse: IncomingPacket {
     }
     
     init(_ buffer: UnsafeRawBufferPointer) throws {
-        guard buffer.count == AllInfoResponse.size else {
+        guard buffer.count == Description.size else {
             throw PacketError.invalidBufferSize
         }
         
-        guard AllInfoResponse.isRecognized(in: buffer) else {
+        guard Description.isRecognized(in: buffer) else {
             throw PacketError.unrecognizedSignature
         }
     }
 }
 
-struct StreamSettingsRequest: StaticOutgoingPacket {
+struct SetUpStream: StaticOutgoingPacket {
     static var bytes: Data {
         return Data(bytes: [0x00, 0x01, 0x01, 0x76,         /*     ...v */
             0x30, 0x30, 0x31, 0x30, 0x30, 0x30, 0x30, 0x36, /* 00100006 */
@@ -122,7 +122,7 @@ struct StreamSettingsRequest: StaticOutgoingPacket {
     }
 }
 
-struct StreamSettingsResponse: IncomingPacket {
+struct StreamSetUpAck: IncomingPacket {
     static let size = 30
     static let signature = UInt32(0x31_74_65_52) /* Ret1 */
     static let signatureOffset = 26
@@ -140,11 +140,11 @@ struct StreamSettingsResponse: IncomingPacket {
     }
     
     init(_ buffer: UnsafeRawBufferPointer) throws {
-        guard buffer.count == StreamSettingsResponse.size else {
+        guard buffer.count == StreamSetUpAck.size else {
             throw PacketError.invalidBufferSize
         }
         
-        guard StreamSettingsResponse.isRecognized(in: buffer) else {
+        guard StreamSetUpAck.isRecognized(in: buffer) else {
             throw PacketError.unrecognizedSignature
         }
     }
@@ -228,5 +228,15 @@ struct VideoData: IncomingPacket {
         
         self.sequence = buffer.load(fromByteOffset: VideoData.sequenceOffset, as: UInt8.self)
         self.bytes = Data(buffer.suffix(from: VideoData.size))
+    }
+}
+
+extension Socket {
+    func send<T>(_ packet: T) throws where T: OutgoingPacket {
+        try send(packet.bytes)
+    }
+    
+    func send<T>(_ packet: T.Type) throws where T: StaticOutgoingPacket {
+        try send(packet.bytes)
     }
 }
