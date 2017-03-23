@@ -37,23 +37,23 @@ class PacketsTests: XCTestCase {
         }
     }
     
-    // MARK: - AllInfoResponse tests
+    // MARK: - Description tests
     
-    func testAllInfoResponseIsRecognizedInBuffer() {
-        let data = Data(bytes: allInfoResponseTestPacketBytes.ignoreUDPHeader())
+    func testDescriptionIsRecognizedInBuffer() {
+        let data = Data(bytes: descriptionTestPacketBytes.ignoreUDPHeader())
     
         data.withUnsafeRawBufferPointer { buffer in
-            XCTAssertTrue(AllInfoResponse.isRecognized(in: buffer))
+            XCTAssertTrue(Description.isRecognized(in: buffer))
         }
     }
     
-    // MARK: - StreamSettingsResponse tests
+    // MARK: - StreamSetUpAck tests
     
-    func testStreamSettingsResponseIsRecognizedInBuffer() {
-        let data = Data(bytes: streamSettingsResponseTestPacketBytes.ignoreUDPHeader())
+    func testStreamSetUpAckIsRecognizedInBuffer() {
+        let data = Data(bytes: streamSetUpAckTestPacketBytes.ignoreUDPHeader())
         
         data.withUnsafeRawBufferPointer { buffer in
-            XCTAssertTrue(StreamSettingsResponse.isRecognized(in: buffer))
+            XCTAssertTrue(StreamSetUpAck.isRecognized(in: buffer))
         }
     }
     

@@ -23,7 +23,7 @@ extension XCTestCase {
         ]
     }
     
-    var allInfoResponseTestPacketBytes: [UInt8] {
+    var descriptionTestPacketBytes: [UInt8] {
         return [
             0x45, 0x00, 0x02, 0xf9, 0x01, 0x3f, 0x00, 0x00, /* E....?.. */
             0x40, 0x11, 0x64, 0x96, 0xc0, 0xa8, 0x48, 0xad, /* @.d...H. */
@@ -124,7 +124,7 @@ extension XCTestCase {
         ]
     }
     
-    var streamSettingsResponseTestPacketBytes: [UInt8] {
+    var streamSetUpAckTestPacketBytes: [UInt8] {
         return [
             0x45, 0x00, 0x00, 0x3a, 0x01, 0x42, 0x00, 0x00, /* E..:.B.. */
             0x40, 0x11, 0x67, 0x52, 0xc0, 0xa8, 0x48, 0xad, /* @.gR..H. */
