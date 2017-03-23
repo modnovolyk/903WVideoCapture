@@ -11,14 +11,19 @@ import AVFoundation
 
 class ViewController: UIViewController {
 
-    let videoStream: NetworkVideoStream = W903NetworkVideoStream()
+    lazy var videoStream: NetworkVideoStream = {
+        let socket = try! UDPSocket(port: 3102, queue: DispatchQueue.main)
+        let buffer = RawH264NaluBuffer(length: 1024 * 50)
+        let converter: VideoStreamConverter & NaluBufferDelegate = ElementaryVideoStreamConverter()
+        
+        return W903NetworkVideoStream(socket: socket, buffer: buffer, converter: converter, delegate: self)
+    }()
     
     lazy var videoLayer: AVSampleBufferDisplayLayer = {
         let layer = AVSampleBufferDisplayLayer()
         
         layer.frame = self.view.frame
         layer.bounds = self.view.bounds
-        //layer.videoGravity = AVLayerVideoGravityResizeAspect
         layer.backgroundColor = UIColor.black.cgColor
         
         return layer
@@ -29,7 +34,7 @@ class ViewController: UIViewController {
      
         view.layer.addSublayer(videoLayer)
         
-        videoStream.delegate = self
+        _ = videoStream
     }
 
     override func didReceiveMemoryWarning() {

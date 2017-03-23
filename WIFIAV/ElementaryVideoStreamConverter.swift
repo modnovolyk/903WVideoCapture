@@ -8,18 +8,6 @@
 
 import AVFoundation
 
-protocol VideoStreamConverter: class {
-    var delegate: StreamConverterDelegate? { get set }
-    
-    init(delegate: StreamConverterDelegate?)
-    
-    func convert(frame: Data)
-}
-
-protocol StreamConverterDelegate: class {
-    func didGatherUp(sample: CMSampleBuffer, in converter: VideoStreamConverter)
-}
-
 class ElementaryVideoStreamConverter: VideoStreamConverter {
     weak var delegate: StreamConverterDelegate?
     

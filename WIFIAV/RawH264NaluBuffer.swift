@@ -8,22 +8,6 @@
 
 import Foundation
 
-protocol NaluBuffer: class {
-    var delegate: NaluBufferDelegate? { get set }
-    var length: Int { get }
-    var bytes: Data { get }
-    
-    init(length: Int, delegate: NaluBufferDelegate?)
-    
-    func append(_ data: Data)
-    func flush()
-}
-
-protocol NaluBufferDelegate: class {
-    func didGatherUp(frame: Data, in buffer: NaluBuffer)
-    func didFail(with error: NaluBufferError, in buffer: NaluBuffer)
-}
-
 enum NaluBufferError: Error {
     case bufferTooSmall
     case notEnoughSpace

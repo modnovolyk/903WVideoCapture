@@ -24,6 +24,7 @@
 		0FCB8F0C1E79E2C2001319E3 /* RawH264NaluBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FCB8F081E79E2C2001319E3 /* RawH264NaluBuffer.swift */; };
 		0FCB8F0D1E79E2C2001319E3 /* UDPSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FCB8F091E79E2C2001319E3 /* UDPSocket.swift */; };
 		0FCB8F0E1E79E2C2001319E3 /* W903NetworkVideoStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FCB8F0A1E79E2C2001319E3 /* W903NetworkVideoStream.swift */; };
+		0FEACDAC1E83CF5B003B7CA1 /* Interfaces.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FEACDAB1E83CF5B003B7CA1 /* Interfaces.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -58,6 +59,7 @@
 		0FCB8F081E79E2C2001319E3 /* RawH264NaluBuffer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RawH264NaluBuffer.swift; sourceTree = "<group>"; };
 		0FCB8F091E79E2C2001319E3 /* UDPSocket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UDPSocket.swift; sourceTree = "<group>"; };
 		0FCB8F0A1E79E2C2001319E3 /* W903NetworkVideoStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = W903NetworkVideoStream.swift; sourceTree = "<group>"; };
+		0FEACDAB1E83CF5B003B7CA1 /* Interfaces.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Interfaces.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -113,6 +115,7 @@
 			isa = PBXGroup;
 			children = (
 				0FCB8F0F1E79E3E7001319E3 /* Helpers */,
+				0FEACDAB1E83CF5B003B7CA1 /* Interfaces.swift */,
 				0FCB8F091E79E2C2001319E3 /* UDPSocket.swift */,
 				0FCB8F081E79E2C2001319E3 /* RawH264NaluBuffer.swift */,
 				0FCB8F071E79E2C2001319E3 /* ElementaryVideoStreamConverter.swift */,
@@ -259,6 +262,7 @@
 				0FCB8F0C1E79E2C2001319E3 /* RawH264NaluBuffer.swift in Sources */,
 				0F56DAA51E37517B008901C3 /* AppDelegate.swift in Sources */,
 				0FCB8F0D1E79E2C2001319E3 /* UDPSocket.swift in Sources */,
+				0FEACDAC1E83CF5B003B7CA1 /* Interfaces.swift in Sources */,
 				0F210E891E4134860067B444 /* Data+hexEncodedString.swift in Sources */,
 				0FCB8F0B1E79E2C2001319E3 /* ElementaryVideoStreamConverter.swift in Sources */,
 				0FCB8F0E1E79E2C2001319E3 /* W903NetworkVideoStream.swift in Sources */,
