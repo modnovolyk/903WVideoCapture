@@ -26,8 +26,8 @@ Before use this code in production consider the following steps:
 - Move stream parsing and conversion to a background thread (you can configure `UDPSocket` with custom delegation `DispatchQueue` for this purpose)
 - Decrease number of memory allocations/deallocations during packet receiving and conversion (reuse same `Unsafe​Mutable​Buffer​Pointer`)
 - Consider setting presentation timestamp of resulting `CMSampleBuffers` for smoother video output
-- Handle player restart on the protocol level (process already buffered frames)
-- Add settings configuration support
+- Handle player restart on the protocol level (process already stacked frames)
+- Add WIFI AVIN 903W settings configuration support
 - Improve error handling (remove usage of forced-try at least)
 - Make `NaluBuffer` implementation conform to `Sequence` and/or `Collection` protocols to be legitimate Swift citizen
 
